@@ -37,5 +37,3 @@ Developed by Brandon James Hoskins for the Vanderbilt Coding Boot Camp, 2021.
 ## License
 
 Creative Commons Zero v1.0 Universal
-
-API Key = 327c433da9985eb244da1437c2c3e4e5
