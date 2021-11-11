@@ -24,3 +24,9 @@ header {
 ul {
   list-style-type: none;
 }
+
+#uv {
+  border-radius: 3px;
+  color: white;
+  padding: 1px 6px;
+}

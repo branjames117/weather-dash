@@ -42,20 +42,20 @@ function getWeatherByCity(city) {
           localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
           populateHistory();
         }
-
         // render data to DOM
-        document.querySelector('#city-name').textContent =
-          data.name +
-          ' (' +
-          new Date(data.dt * 1000).toDateString().slice(4) +
-          ')';
+        document.querySelector('#city-name').innerHTML = `${
+          data.name
+        } (${new Date(data.dt * 1000)
+          .toDateString()
+          .slice(4)}) <img src="http://openweathermap.org/img/wn/${
+          data.weather[0].icon
+        }.png" />`;
         document.querySelector('#temp').textContent =
           'Temp: ' + data.main.temp + ' °F';
         document.querySelector('#wind').textContent =
           'Wind: ' + data.wind.speed + ' MPH';
         document.querySelector('#humidity').textContent =
           'Humidity: ' + data.main.humidity + ' %';
-        document.querySelector('#uvindex').textContent = 'UV Index: ';
       });
     } else {
       invalidQuery();
@@ -76,8 +76,51 @@ function getUVIndex(longitude, latitude) {
       res.json().then((data) => {
         // one call API also gives us our forecast, so send to be rendered
         getForecast(data.daily);
-        document.querySelector('#uvindex').textContent =
-          'UV Index: ' + data.current.uvi;
+        document.querySelector(
+          '#uvindex'
+        ).innerHTML = `UV Index: <span id="uv">${data.current.uvi}</span>`;
+        const UVdisplay = document.querySelector('#uv');
+        UVdisplay.style.color = 'white';
+        switch (Math.floor(data.current.uvi)) {
+          case 0:
+            UVdisplay.style.backgroundColor = 'blue';
+            break;
+          case 1:
+            UVdisplay.style.backgroundColor = 'green';
+            break;
+          case 2:
+            UVdisplay.style.backgroundColor = 'lightgreen';
+            break;
+          case 3:
+            UVdisplay.style.backgroundColor = 'yellow';
+            break;
+          case 4:
+            UVdisplay.style.backgroundColor = 'darkyellow';
+            break;
+          case 5:
+            UVdisplay.style.backgroundColor = 'orange';
+            break;
+          case 6:
+            UVdisplay.style.backgroundColor = 'darkorange';
+            break;
+          case 7:
+            UVdisplay.style.backgroundColor = 'red';
+            break;
+          case 8:
+            UVdisplay.style.backgroundColor = 'darkred';
+            break;
+          case 9:
+            UVdisplay.style.backgroundColor = 'pink';
+            break;
+          case 10:
+          case 11:
+          case 12:
+          case 13:
+          case 14:
+          case 15:
+            UVdisplay.style.backgroundColor = 'violet';
+            break;
+        }
       });
     } else {
       document.querySelector('#uvindex').textContent = 'UV Index: N/A';
@@ -91,11 +134,17 @@ function getForecast(forecast) {
 
   for (let i = 1; i < 6; i++) {
     const forecastCardEl = document.createElement('div');
-    forecastCardEl.classList.add('col-6');
-    forecastCardEl.classList.add('col-md-4');
+    forecastCardEl.classList.add('col-5');
+    forecastCardEl.classList.add('col-lg-3');
+    forecastCardEl.classList.add('col-xl-2');
+    forecastCardEl.classList.add('border');
+    forecastCardEl.classList.add('rounded');
+    forecastCardEl.classList.add('m-2');
     forecastCardEl.innerHTML = `<h3>${new Date(forecast[i].dt * 1000)
       .toDateString()
-      .slice(4)}</h3><p>Temp: ${forecast[i].temp.max} °F</p><p>Wind: ${
+      .slice(4)}</h3><img src='http://openweathermap.org/img/wn/${
+      forecast[i].weather[0].icon
+    }.png' /><p>Temp: ${forecast[i].temp.max} °F</p><p>Wind: ${
       forecast[i].wind_speed
     } MPH</p><p>Humidity: ${forecast[i].humidity} %</p>`;
 
@@ -135,7 +184,6 @@ function populateHistory() {
   }
 
   for (let i = citiesHistory.length - 1, k = 0; i >= 0 && k < 10; i--, k++) {
-    console.log(i);
     const historyButtonEl = document.createElement('button');
     historyButtonEl.classList.add('btn');
     historyButtonEl.classList.add('btn-primary');
