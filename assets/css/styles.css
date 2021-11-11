@@ -25,6 +25,11 @@ ul {
   list-style-type: none;
 }
 
+.card-header {
+  background: linear-gradient(to right, rgb(84, 90, 170), rgb(13, 13, 148));
+  color: rgb(241, 241, 241);
+}
+
 #uv {
   border-radius: 3px;
   color: white;

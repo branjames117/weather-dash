@@ -21,6 +21,12 @@ if (!localStorage.citiesHistory) {
 // pull from local storage
 citiesHistory = JSON.parse(localStorage.citiesHistory);
 
+// clear history button
+document.querySelector('#clear-history').addEventListener('click', function () {
+  citiesHistory = [];
+  localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
+});
+
 // get weather by city function - calls API
 function getWeatherByCity(city) {
   fetch(
@@ -38,7 +44,7 @@ function getWeatherByCity(city) {
         // with successful query, push to local storage, but only if not already there
         if (citiesHistory.indexOf(city) >= 0) {
         } else {
-          citiesHistory.push(city);
+          citiesHistory.push(data.name);
           localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
           populateHistory();
         }
@@ -79,6 +85,8 @@ function getUVIndex(longitude, latitude) {
         document.querySelector(
           '#uvindex'
         ).innerHTML = `UV Index: <span id="uv">${data.current.uvi}</span>`;
+
+        // handle UV background color logic
         const UVdisplay = document.querySelector('#uv');
         UVdisplay.style.color = 'white';
         switch (Math.floor(data.current.uvi)) {
@@ -132,14 +140,18 @@ function getUVIndex(longitude, latitude) {
 function getForecast(forecast) {
   const forecastEl = document.querySelector('#forecast');
 
+  // clear the previous history
+  while (forecastEl.lastChild) {
+    forecastEl.removeChild(forecastEl.lastChild);
+  }
+
   for (let i = 1; i < 6; i++) {
     const forecastCardEl = document.createElement('div');
     forecastCardEl.classList.add('col-5');
     forecastCardEl.classList.add('col-lg-3');
     forecastCardEl.classList.add('col-xl-2');
-    forecastCardEl.classList.add('border');
-    forecastCardEl.classList.add('rounded');
     forecastCardEl.classList.add('m-2');
+    forecastCardEl.classList.add('p-0');
     forecastCardEl.innerHTML = `<h3>${new Date(forecast[i].dt * 1000)
       .toDateString()
       .slice(4)}</h3><img src='http://openweathermap.org/img/wn/${
@@ -198,7 +210,9 @@ function populateHistory() {
   }
 
   // pull up the most recent search result
-  getWeatherByCity(citiesHistory[citiesHistory.length - 1]);
+  if (citiesHistory.length > 0) {
+    getWeatherByCity(citiesHistory[citiesHistory.length - 1]);
+  }
 }
 
 populateHistory();
