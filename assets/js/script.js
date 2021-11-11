@@ -12,6 +12,15 @@ inputEl.addEventListener('keypress', function () {
   errorEl.textContent = '';
 });
 
+// initialize localStorage array
+let citiesHistory = [];
+// if it doesn't exist, create it
+if (!localStorage.citiesHistory) {
+  localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
+}
+// pull from local storage
+citiesHistory = JSON.parse(localStorage.citiesHistory);
+
 // get weather by city function - calls API
 function getWeatherByCity(city) {
   fetch(
@@ -25,6 +34,14 @@ function getWeatherByCity(city) {
         const latitude = data.coord.lat;
         // getting UV index requires different API using lat and lon
         getUVIndex(longitude, latitude);
+
+        // with successful query, push to local storage, but only if not already there
+        if (citiesHistory.indexOf(city) >= 0) {
+        } else {
+          citiesHistory.push(city);
+          localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
+          populateHistory();
+        }
 
         // render data to DOM
         document.querySelector('#city-name').textContent =
@@ -72,8 +89,6 @@ function getUVIndex(longitude, latitude) {
 function getForecast(forecast) {
   const forecastEl = document.querySelector('#forecast');
 
-  console.log(forecast);
-
   for (let i = 1; i < 6; i++) {
     const forecastCardEl = document.createElement('div');
     forecastCardEl.classList.add('col-6');
@@ -109,3 +124,33 @@ formEl.addEventListener('submit', (e) => {
   // clear search input
   inputEl.value = '';
 });
+
+// populate history sidebar from localStorage
+function populateHistory() {
+  const historyEl = document.querySelector('#history');
+
+  // clear the previous history
+  while (historyEl.lastChild) {
+    historyEl.removeChild(historyEl.lastChild);
+  }
+
+  for (let i = citiesHistory.length - 1, k = 0; i >= 0 && k < 10; i--, k++) {
+    console.log(i);
+    const historyButtonEl = document.createElement('button');
+    historyButtonEl.classList.add('btn');
+    historyButtonEl.classList.add('btn-primary');
+    historyButtonEl.classList.add('w-100');
+    historyButtonEl.classList.add('mt-1');
+    historyButtonEl.textContent = citiesHistory[i];
+    historyButtonEl.addEventListener('click', function () {
+      getWeatherByCity(citiesHistory[i]);
+    });
+
+    historyEl.append(historyButtonEl);
+  }
+
+  // pull up the most recent search result
+  getWeatherByCity(citiesHistory[citiesHistory.length - 1]);
+}
+
+populateHistory();
