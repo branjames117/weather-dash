@@ -2,6 +2,8 @@
 const inputEl = document.querySelector('input');
 const errorEl = document.querySelector('#error');
 const cityNameEl = document.querySelector('#city-name');
+const historyEl = document.querySelector('#history');
+const mainWeatherContainerEl = document.querySelector('#weather-container');
 
 // immediately focus the input field
 inputEl.focus();
@@ -25,15 +27,24 @@ citiesHistory = JSON.parse(localStorage.citiesHistory);
 document.querySelector('#clear-history').addEventListener('click', function () {
   citiesHistory = [];
   localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
+  // clear the previous history
+  while (historyEl.lastChild) {
+    historyEl.removeChild(historyEl.lastChild);
+  }
 });
 
-// get weather by city function - calls API
+// get weather by city function - calls API and also updates history in local storage
 function getWeatherByCity(city) {
+  // show Loading indication
+  cityNameEl.textContent = 'Loading...';
+
+  // fetch data from
   fetch(
     'https://api.openweathermap.org/data/2.5/weather?q=' +
       city +
       '&units=imperial&appid=327c433da9985eb244da1437c2c3e4e5'
   ).then((res) => {
+    console.log(res);
     if (res.ok) {
       res.json().then((data) => {
         const longitude = data.coord.lon;
@@ -41,13 +52,18 @@ function getWeatherByCity(city) {
         // getting UV index requires different API using lat and lon
         getUVIndex(longitude, latitude);
 
-        // with successful query, push to local storage, but only if not already there
-        if (citiesHistory.indexOf(city) >= 0) {
-        } else {
-          citiesHistory.push(data.name);
-          localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
-          populateHistory();
+        // set container background based on icon
+        const icon = data.weather[0].icon;
+        setContainerBackground(icon);
+
+        // with successful query, push to local storage, and if storage already has 10 items, drop the oldest one
+        if (citiesHistory.length === 10) {
+          citiesHistory.shift();
         }
+        citiesHistory.push(data.name);
+        localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
+        populateHistory();
+
         // render data to DOM
         document.querySelector('#city-name').innerHTML = `${
           data.name
@@ -63,8 +79,14 @@ function getWeatherByCity(city) {
         document.querySelector('#humidity').textContent =
           'Humidity: ' + data.main.humidity + ' %';
       });
+      // oops, too many API requests
+    } else if (res.status === 429) {
+      cityNameEl.textContent = 'Fetch failed...';
+      invalidQuery('API limit exceeded. Please try again later.');
+      // oops, input didn't match a city in API
     } else {
-      invalidQuery();
+      cityNameEl.textContent = 'Fetch failed...';
+      invalidQuery('Invalid city. Please try something else.');
     }
   });
 }
@@ -88,10 +110,11 @@ function getUVIndex(longitude, latitude) {
 
         // handle UV background color logic
         const UVdisplay = document.querySelector('#uv');
-        UVdisplay.style.color = 'white';
+        UVdisplay.style.color = 'black';
         switch (Math.floor(data.current.uvi)) {
           case 0:
             UVdisplay.style.backgroundColor = 'blue';
+            UVdisplay.style.color = 'white';
             break;
           case 1:
             UVdisplay.style.backgroundColor = 'green';
@@ -113,9 +136,11 @@ function getUVIndex(longitude, latitude) {
             break;
           case 7:
             UVdisplay.style.backgroundColor = 'red';
+            UVdisplay.style.color = 'white';
             break;
           case 8:
             UVdisplay.style.backgroundColor = 'darkred';
+            UVdisplay.style.color = 'white';
             break;
           case 9:
             UVdisplay.style.backgroundColor = 'pink';
@@ -147,28 +172,24 @@ function getForecast(forecast) {
 
   for (let i = 1; i < 6; i++) {
     const forecastCardEl = document.createElement('div');
-    forecastCardEl.classList.add('col-5');
-    forecastCardEl.classList.add('col-lg-3');
-    forecastCardEl.classList.add('col-xl-2');
-    forecastCardEl.classList.add('m-2');
-    forecastCardEl.classList.add('p-0');
+    forecastCardEl.classList = 'col-5 col-lg-3 col-xl-2 m-2 p-0';
     forecastCardEl.innerHTML = `<h3>${new Date(forecast[i].dt * 1000)
       .toDateString()
-      .slice(4)}</h3><img src='http://openweathermap.org/img/wn/${
+      .slice(4, -4)}</h3><img src='http://openweathermap.org/img/wn/${
       forecast[i].weather[0].icon
     }.png' /><p>Temp: ${forecast[i].temp.max} °F</p><p>Wind: ${
       forecast[i].wind_speed
-    } MPH</p><p>Humidity: ${forecast[i].humidity} %</p>`;
+    } <small>MPH</small></p><p>Humidity: ${forecast[i].humidity} %</p>`;
 
     forecastEl.appendChild(forecastCardEl);
   }
 }
 
 // invalid query input
-function invalidQuery() {
+function invalidQuery(msg) {
   inputEl.focus();
   inputEl.style.borderColor = 'red';
-  errorEl.textContent = 'Invalid city. Please try again.';
+  errorEl.textContent = msg;
 }
 
 // form submit listener
@@ -186,10 +207,63 @@ formEl.addEventListener('submit', (e) => {
   inputEl.value = '';
 });
 
+// set container background per icon
+function setContainerBackground(icon) {
+  console.log(icon);
+  switch (icon) {
+    // generally sunny conditions
+    case '01d':
+    case '02d':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/sunny.jpg")';
+      mainWeatherContainerEl.style.color = 'white';
+      break;
+    // generally cloudy conditions
+    case '03d':
+    case '04d':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/cloudy.jpg")';
+      mainWeatherContainerEl.style.color = 'blue';
+      break;
+    // generally rainy conditions
+    case '09d':
+    case '10d':
+    case '50d':
+    case '50n':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/rainy.jpg")';
+      mainWeatherContainerEl.style.color = 'white';
+      break;
+    // generally stormy conditions
+    case '11d':
+    case '11n':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/storm.jpg")';
+      mainWeatherContainerEl.style.color = 'white';
+      break;
+    // generally snowy conditions
+    case '13d':
+    case '13n':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/snowy.jpg")';
+      mainWeatherContainerEl.style.color = 'white';
+      break;
+    // it's night so just show some stars
+    case '01n':
+    case '02n':
+    case '03n':
+    case '04n':
+    case '09n':
+    case '10n':
+      mainWeatherContainerEl.style.background =
+        'url("./assets/images/night.jpg")';
+      mainWeatherContainerEl.style.color = 'white';
+      break;
+  }
+}
+
 // populate history sidebar from localStorage
 function populateHistory() {
-  const historyEl = document.querySelector('#history');
-
   // clear the previous history
   while (historyEl.lastChild) {
     historyEl.removeChild(historyEl.lastChild);
@@ -207,11 +281,6 @@ function populateHistory() {
     });
 
     historyEl.append(historyButtonEl);
-  }
-
-  // pull up the most recent search result
-  if (citiesHistory.length > 0) {
-    getWeatherByCity(citiesHistory[citiesHistory.length - 1]);
   }
 }
 
