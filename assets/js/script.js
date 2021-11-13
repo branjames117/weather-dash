@@ -44,7 +44,6 @@ function getWeatherByCity(city) {
       city +
       '&units=imperial&appid=327c433da9985eb244da1437c2c3e4e5'
   ).then((res) => {
-    console.log(res);
     if (res.ok) {
       res.json().then((data) => {
         const longitude = data.coord.lon;
@@ -209,7 +208,6 @@ formEl.addEventListener('submit', (e) => {
 
 // set container background per icon
 function setContainerBackground(icon) {
-  console.log(icon);
   switch (icon) {
     // generally sunny conditions
     case '01d':
