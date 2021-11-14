@@ -30,6 +30,12 @@ ul {
   color: rgb(241, 241, 241);
 }
 
+.text-container p {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  padding-left: 20px;
+}
+
 #uv {
   border-radius: 3px;
   color: black;

@@ -42,8 +42,9 @@ function getWeatherByCity(city) {
   fetch(
     'https://api.openweathermap.org/data/2.5/weather?q=' +
       city +
-      '&units=imperial&appid=327c433da9985eb244da1437c2c3e4e5'
+      '&units=imperial&appid=ef0ef45aa47279ba07daa36096cacfa0'
   ).then((res) => {
+    console.log(res);
     if (res.ok) {
       res.json().then((data) => {
         const longitude = data.coord.lon;
@@ -85,7 +86,7 @@ function getWeatherByCity(city) {
       // oops, input didn't match a city in API
     } else {
       cityNameEl.textContent = 'Fetch failed...';
-      invalidQuery('Invalid city. Please try something else.');
+      invalidQuery('Invalid entry. Please try something else.');
     }
   });
 }
@@ -97,7 +98,7 @@ function getUVIndex(longitude, latitude) {
       latitude +
       '&lon=' +
       longitude +
-      '&units=imperial&appid=327c433da9985eb244da1437c2c3e4e5'
+      '&units=imperial&appid=ef0ef45aa47279ba07daa36096cacfa0'
   ).then((res) => {
     if (res.ok) {
       res.json().then((data) => {
@@ -214,14 +215,12 @@ function setContainerBackground(icon) {
     case '02d':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/sunny.jpg")';
-      mainWeatherContainerEl.style.color = 'white';
       break;
     // generally cloudy conditions
     case '03d':
     case '04d':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/cloudy.jpg")';
-      mainWeatherContainerEl.style.color = 'blue';
       break;
     // generally rainy conditions
     case '09d':
@@ -230,21 +229,18 @@ function setContainerBackground(icon) {
     case '50n':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/rainy.jpg")';
-      mainWeatherContainerEl.style.color = 'white';
       break;
     // generally stormy conditions
     case '11d':
     case '11n':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/storm.jpg")';
-      mainWeatherContainerEl.style.color = 'white';
       break;
     // generally snowy conditions
     case '13d':
     case '13n':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/snowy.jpg")';
-      mainWeatherContainerEl.style.color = 'white';
       break;
     // it's night so just show some stars
     case '01n':
@@ -255,7 +251,6 @@ function setContainerBackground(icon) {
     case '10n':
       mainWeatherContainerEl.style.background =
         'url("./assets/images/night.jpg")';
-      mainWeatherContainerEl.style.color = 'white';
       break;
   }
 }
