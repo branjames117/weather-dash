@@ -7,7 +7,6 @@
 }
 
 body {
-  background-color: white;
   color: black;
   font-family: 'Roboto', sans-serif;
 }
@@ -33,7 +32,7 @@ ul {
 .text-container p {
   background: rgba(0, 0, 0, 0.3);
   color: white;
-  padding-left: 20px;
+  padding-left: 10px;
 }
 
 #uv {

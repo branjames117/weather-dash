@@ -172,7 +172,7 @@ function getForecast(forecast) {
 
   for (let i = 1; i < 6; i++) {
     const forecastCardEl = document.createElement('div');
-    forecastCardEl.classList = 'col-5 col-lg-3 col-xl-2 m-2 p-0';
+    forecastCardEl.classList = 'col-4 col-lg-3 col-xl-2 m-2 p-0';
     forecastCardEl.innerHTML = `<h3>${new Date(forecast[i].dt * 1000)
       .toDateString()
       .slice(4, -4)}</h3><img src='http://openweathermap.org/img/wn/${
@@ -183,6 +183,10 @@ function getForecast(forecast) {
 
     forecastEl.appendChild(forecastCardEl);
   }
+
+  const extraEl = document.createElement('div');
+  extraEl.classList = 'col-4 col-lg-3 col-xl-2 m-2 p-0';
+  forecastEl.appendChild(extraEl);
 }
 
 // invalid query input
