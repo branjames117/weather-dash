@@ -4,6 +4,8 @@ const errorEl = document.querySelector('#error');
 const cityNameEl = document.querySelector('#city-name');
 const historyEl = document.querySelector('#history');
 const mainWeatherContainerEl = document.querySelector('#weather-container');
+const UVdisplay = document.querySelector('#uv');
+const forecastEl = document.querySelector('#forecast');
 
 // immediately focus the input field
 inputEl.focus();
@@ -28,10 +30,14 @@ document.querySelector('#clear-history').addEventListener('click', function () {
   citiesHistory = [];
   localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
   // clear the previous history
+  clearHistoryElements();
+});
+
+function clearHistoryElements() {
   while (historyEl.lastChild) {
     historyEl.removeChild(historyEl.lastChild);
   }
-});
+}
 
 // get weather by city function - calls API and also updates history in local storage
 function getWeatherByCity(city) {
@@ -44,9 +50,11 @@ function getWeatherByCity(city) {
       city +
       '&units=imperial&appid=ef0ef45aa47279ba07daa36096cacfa0'
   ).then((res) => {
-    console.log(res);
     if (res.ok) {
       res.json().then((data) => {
+        // clear out any potential errors in search box
+        inputEl.style.borderColor = '';
+        errorEl.textContent = '';
         const longitude = data.coord.lon;
         const latitude = data.coord.lat;
         // getting UV index requires different API using lat and lon
@@ -56,10 +64,15 @@ function getWeatherByCity(city) {
         const icon = data.weather[0].icon;
         setContainerBackground(icon);
 
-        // with successful query, push to local storage, and if storage already has 10 items, drop the oldest one
+        // filter city out of history if it's already there
+        citiesHistory = citiesHistory.filter((city) => city !== data.name);
+
+        // if history is 10 items long already, drop the oldest one
         if (citiesHistory.length === 10) {
           citiesHistory.shift();
         }
+
+        // push city to local storage and populate HTML elements
         citiesHistory.push(data.name);
         localStorage.setItem('citiesHistory', JSON.stringify(citiesHistory));
         populateHistory();
@@ -72,24 +85,24 @@ function getWeatherByCity(city) {
           .slice(4)}) <img src="http://openweathermap.org/img/wn/${
           data.weather[0].icon
         }.png" />`;
-        document.querySelector('#temp').textContent =
-          'Temp: ' + data.main.temp + ' °F';
-        document.querySelector('#wind').textContent =
-          'Wind: ' + data.wind.speed + ' MPH';
+        document.querySelector('#temp').textContent = data.main.temp + ' °F';
+        document.querySelector('#wind').textContent = data.wind.speed + ' MPH';
         document.querySelector('#humidity').textContent =
-          'Humidity: ' + data.main.humidity + ' %';
+          data.main.humidity + ' %';
       });
       // oops, too many API requests
     } else if (res.status === 429) {
-      cityNameEl.textContent = 'Fetch failed...';
       invalidQuery('API limit exceeded. Please try again later.');
+      throw Error(res.statusText);
       // oops, input didn't match a city in API
     } else {
-      cityNameEl.textContent = 'Fetch failed...';
       invalidQuery('Invalid entry. Please try something else.');
+      throw Error(res.statusText);
     }
   });
 }
+
+function fetchErrorDisplay() {}
 
 // get UV index by longitude and lattitude, requires separate fetch request to One Call API
 function getUVIndex(longitude, latitude) {
@@ -104,12 +117,9 @@ function getUVIndex(longitude, latitude) {
       res.json().then((data) => {
         // one call API also gives us our forecast, so send to be rendered
         getForecast(data.daily);
-        document.querySelector(
-          '#uvindex'
-        ).innerHTML = `UV Index: <span id="uv">${data.current.uvi}</span>`;
+        UVdisplay.textContent = `${data.current.uvi}`;
 
         // handle UV background color logic
-        const UVdisplay = document.querySelector('#uv');
         UVdisplay.style.color = 'black';
         switch (Math.floor(data.current.uvi)) {
           case 0:
@@ -126,7 +136,7 @@ function getUVIndex(longitude, latitude) {
             UVdisplay.style.backgroundColor = 'yellow';
             break;
           case 4:
-            UVdisplay.style.backgroundColor = 'darkyellow';
+            UVdisplay.style.backgroundColor = 'goldenrod';
             break;
           case 5:
             UVdisplay.style.backgroundColor = 'orange';
@@ -156,15 +166,13 @@ function getUVIndex(longitude, latitude) {
         }
       });
     } else {
-      document.querySelector('#uvindex').textContent = 'UV Index: N/A';
+      UVdisplay.textContent = 'N/A';
     }
   });
 }
 
 // get forecast by city function - calls API
 function getForecast(forecast) {
-  const forecastEl = document.querySelector('#forecast');
-
   // clear the previous history
   while (forecastEl.lastChild) {
     forecastEl.removeChild(forecastEl.lastChild);
@@ -191,6 +199,18 @@ function getForecast(forecast) {
 
 // invalid query input
 function invalidQuery(msg) {
+  // reset all elements
+  cityNameEl.textContent = 'Fetch failed...';
+  mainWeatherContainerEl.style.background = '';
+  document.querySelector('#temp').textContent = '';
+  document.querySelector('#wind').textContent = '';
+  document.querySelector('#humidity').textContent = '';
+  document.querySelector('#uv').textContent = '';
+  // clear out the forecast
+  while (forecastEl.lastChild) {
+    forecastEl.removeChild(forecastEl.lastChild);
+  }
+  // refocus search bar and highlight red, add err msg underneath
   inputEl.focus();
   inputEl.style.borderColor = 'red';
   errorEl.textContent = msg;
