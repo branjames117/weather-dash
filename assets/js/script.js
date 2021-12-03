@@ -67,8 +67,8 @@ function getWeatherByCity(city) {
         // filter city out of history if it's already there
         citiesHistory = citiesHistory.filter((city) => city !== data.name);
 
-        // if history is 10 items long already, drop the oldest one
-        if (citiesHistory.length === 10) {
+        // if history is 20 items long already, drop the oldest one
+        if (citiesHistory.length === 20) {
           citiesHistory.shift();
         }
 
